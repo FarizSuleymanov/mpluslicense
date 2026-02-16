@@ -1,0 +1,61 @@
+name: mpluslicense
+description: "MPlus License"
+
+publish_to: 'none'
+
+
+version: 1.0.1
+
+environment:
+  sdk: '>=3.4.4 <4.0.0'
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  http: ^1.6.0
+  flutter_session_manager: ^1.0.3
+  jwt_decoder:  ^2.0.1
+  uuid:  ^4.5.2
+  crypto: ^3.0.7
+  syncfusion_flutter_datagrid: ^32.2.4
+  date_format: ^2.0.9
+  flutter_speed_dial: ^7.0.0
+  flutter_spinkit: ^5.2.2
+  package_info_plus: ^9.0.0
+  excel: ^4.0.6
+  number_pagination: ^1.1.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - settings/config.json
+    - assets/
+  fonts:
+    - family: urbanist
+      fonts:
+        - asset: fonts/urbanist.ttf
+    - family: poppins_medium
+      fonts:
+        - asset: fonts/Poppins-Medium.ttf
+    - family: poppins_regular
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+    - family: poppins_semibold
+      fonts:
+        - asset: fonts/Poppins-SemiBold.ttf
+    - family: poppins_bold
+      fonts:
+        - asset: fonts/Poppins-Bold.ttf
+    - family: poppins_light
+      fonts:
+        - asset: fonts/Poppins-Light.ttf
