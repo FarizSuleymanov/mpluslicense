@@ -528,6 +528,8 @@ class Widgets {
                     SizedBox(
                       height: 60,
                       child: NumberPagination(
+
+                        controlButtonColor: Styles.defaultWidgetForeColor,
                         onPageChanged: (int pageNumber) {
                           onPageChanged(pageNumber);
                         },
