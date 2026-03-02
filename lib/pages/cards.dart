@@ -430,6 +430,12 @@ class _CardsState extends State<Cards> {
             'width': 200
           },
           {
+            "key": "conCurrentUserCount",
+            "value": "Aktiv istifadəçi",
+            "visible": true,
+            'width': 200
+          },
+          {
             "key": "conLicenseLimit",
             "value": "Lisenziya limiti",
             "visible": true,
