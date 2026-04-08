@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mpluslicense/model/userparams.dart';
+import 'package:uuid/uuid.dart';
 import '../../theme/styles.dart';
 import '../../util/api.dart';
 import '../../util/returnmessages.dart';
+import '../../util/utils.dart';
 import '../../widgets/widgets.dart';
 
 class ChangePassword extends StatefulWidget {
@@ -49,27 +51,21 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   Future<void> changePassword(
       String userId, String userOldPassword, String userNewPassword) async {
-    Map body_ = {
-      "userGuid": userId,
-      "oldPassword": getPasswordSha1(userOldPassword),
-      "newPassword": getPasswordSha1(userNewPassword)
-    };
+    var uuid = const Uuid();
+    String uuid_ = uuid.v6().replaceAll('-', '');
+    String parametr = Utils().encryptData(
+        '${getPasswordSha1(userOldPassword)}_|_${getPasswordSha1(userNewPassword)}',
+        uuid_);
+
+    Map body_ = {"param": parametr, "processId": uuid_};
     String url_ = "${widget.userParams.serverName}Users/ChangeFirmPassword";
     http.StreamedResponse response = await API()
-        .request_(context, 'PUT', url_, body_, widget.userParams.userToken);
+        .request_(context, 'POST', url_, body_, widget.userParams.userToken);
     if (response.statusCode == 200) {
-      dynamic rslt = jsonDecode(await response.stream.bytesToString());
-      dynamic result = rslt["result"];
-      if (result == 0) {
-        if (mounted) {
-          ReturnMessages().showSnackBar(context, 'Şifrə dəyişdirildi!', 1);
-        }
-        if (mounted) Navigator.pop(context);
-      } else {
-        if (mounted) {
-          ReturnMessages().showSnackBar(context, 'Köhnə şifrə doğru deyil!', 0);
-        }
+      if (mounted) {
+        ReturnMessages().showSnackBar(context, 'Şifrə dəyişdirildi!', 1);
       }
+      if (mounted) Navigator.pop(context);
     }
   }
 

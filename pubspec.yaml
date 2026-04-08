@@ -4,7 +4,7 @@ description: "MPlus License"
 publish_to: 'none'
 
 
-version: 1.0.2+2
+version: 1.0.4
 
 environment:
   sdk: '>=3.4.4 <4.0.0'
@@ -19,7 +19,7 @@ dependencies:
   jwt_decoder:  ^2.0.1
   uuid:  ^4.5.2
   crypto: ^3.0.7
-  syncfusion_flutter_datagrid: ^32.2.4
+  syncfusion_flutter_datagrid: ^33.1.47
   date_format: ^2.0.9
   flutter_speed_dial: ^7.0.0
   flutter_spinkit: ^5.2.2

@@ -47,7 +47,7 @@ class API {
       if (context.mounted) {
         String errorMessage = await response.stream.bytesToString();
         if (!context.mounted) return response;
-        ReturnMessages().showSnackBar(context, 'Xəta:$errorMessage', 0);
+        ReturnMessages().showSnackBar(context, 'Xəta: $errorMessage', 0);
       }
     }
     return response;
