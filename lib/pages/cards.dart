@@ -107,6 +107,15 @@ class _CardsState extends State<Cards> {
           onTap: () {
             exportToExcel();
           }),
+      if (widget.pageName == 'Users')
+        SpeedDialChild(
+            child: const Icon(Icons.mobile_friendly),
+            backgroundColor: Colors.deepOrangeAccent,
+            foregroundColor: Colors.white,
+            label: 'Bütün istifadəçiləri giriş edilməmiş kimi qeyd et',
+            onTap: () {
+              setLoggedInOff();
+            }),
     ];
   }
 
@@ -539,14 +548,6 @@ class _CardsState extends State<Cards> {
     searchController.clear();
   }
 
-  void setStateWhenReload() {
-    if (widget.reloaded) {
-      pageSelected = 1;
-      load();
-      widget.reloaded = false;
-    }
-  }
-
   void onSearchSubmitted(String searchWord) {
     getData(selectedStatusID, selectedFirmGuid, searchWord: searchWord);
   }
@@ -558,8 +559,17 @@ class _CardsState extends State<Cards> {
   }
 
   @override
+  void didUpdateWidget(covariant Cards oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pageName != oldWidget.pageName ||
+        (widget.reloaded && !oldWidget.reloaded)) {
+      pageSelected = 1;
+      load();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    setStateWhenReload();
     cardListDataSource = CardListDataSource(list, gridColumns);
     return Widgets().setCardList(
         getSpeedDialChildren(),
@@ -581,5 +591,22 @@ class _CardsState extends State<Cards> {
         (row, globalPosition) => _showContextMenu(context, globalPosition, row),
         searchController,
         (searchWord) => onSearchSubmitted(searchWord));
+  }
+
+  Future<void> setLoggedInOff() async {
+    String url =
+        "${widget.userParams.serverName}$webControllerName/setUsersLoggedOut";
+    http.StreamedResponse response = await API()
+        .request_(context, 'POST', url, {}, widget.userParams.userToken);
+    if (!context.mounted) return;
+    if (response.statusCode == 200) {
+      load();
+      if (mounted) {
+        ReturnMessages()
+            .showSnackBar(context, "İstifadəçilərin giriş edilməsi açıldı!", 1);
+      }
+    } else {
+      if (mounted) ReturnMessages().showSnackBar(context, "Xəta yarandı!", 0);
+    }
   }
 }
