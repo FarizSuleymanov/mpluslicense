@@ -48,6 +48,26 @@ class _CardsState extends State<Cards> {
     setState(() {
       isLoading = true;
     });
+    Pager pager = Pager(pageNumber: pageSelected, pageSize: rowsPerPage);
+    Map body = buildFilters(selectedStatusID_, selectedFirmGuid_, searchWord,
+            pager)
+        .toJson();
+    dynamic data = await Utils()
+        .getCardList(context, widget.userParams, webControllerName, body);
+    list = data['objects'] as List;
+    int rowCount = data['count'] as int;
+    pageCount = (rowCount / rowsPerPage).ceil();
+    pageCount = pageCount == 0 ? 1 : pageCount;
+    setState(() {
+      isLoading = false;
+      reloaded = false;
+      selectedStatusID = selectedStatusID_;
+      selectedFirmGuid = selectedFirmGuid_;
+    });
+  }
+
+  Filters buildFilters(dynamic selectedStatusID_, String selectedFirmGuid_,
+      String searchWord, Pager pager) {
     List<FilterConditions> listFilterForSend = [];
     if (selectedFirmGuid_ != 'all') {
       listFilterForSend.add(FilterConditions(
@@ -66,24 +86,32 @@ class _CardsState extends State<Cards> {
           valueX: searchWord,
           valueY: ''));
     }
-    Pager pager = Pager(pageNumber: pageSelected, pageSize: rowsPerPage);
-    Filters filters = Filters(
+    return Filters(
         status: selectedStatusID_ == '0' ? 1 : 0,
         pager: pager,
         filterConditions: listFilterForSend);
-    Map body = filters.toJson();
-    dynamic data = await Utils()
-        .getCardList(context, widget.userParams, webControllerName, body);
-    list = data['objects'] as List;
-    int rowCount = data['count'] as int;
-    pageCount = (rowCount / rowsPerPage).ceil();
-    pageCount = pageCount == 0 ? 1 : pageCount;
-    setState(() {
-      isLoading = false;
-      reloaded = false;
-      selectedStatusID = selectedStatusID_;
-      selectedFirmGuid = selectedFirmGuid_;
-    });
+  }
+
+  // Excel üçün bütün səhifələri API-dan yığır (cari filtrlərlə).
+  Future<List> getAllData() async {
+    const int exportPageSize = 1000;
+    List allRows = [];
+    int pageNumber = 1;
+    while (true) {
+      Pager pager = Pager(pageNumber: pageNumber, pageSize: exportPageSize);
+      Map body = buildFilters(selectedStatusID, selectedFirmGuid,
+              searchController.text.trim(), pager)
+          .toJson();
+      dynamic data = await Utils()
+          .getCardList(context, widget.userParams, webControllerName, body);
+      if (data == null) throw Exception('Məlumatlar alınmadı');
+      List rows = data['objects'] as List;
+      int rowCount = data['count'] as int;
+      allRows.addAll(rows);
+      if (rows.isEmpty || allRows.length >= rowCount) break;
+      pageNumber++;
+    }
+    return allRows;
   }
 
   List<SpeedDialChild> getSpeedDialChildren() {
@@ -275,8 +303,13 @@ class _CardsState extends State<Cards> {
   void exportToExcel() async {
     ReturnMessages()
         .showSnackBar(context, 'Excel-ə köçürmə əməliyyatı başladıldı!', 1);
-    ExcelOperations()
-        .exportListToExcelFile(webControllerName, gridColumns, list);
+    try {
+      List allRows = await getAllData();
+      await ExcelOperations()
+          .exportListToExcelFile(webControllerName, gridColumns, allRows);
+    } catch (e) {
+      if (mounted) ReturnMessages().showSnackBar(context, "Xəta:$e", 0);
+    }
   }
 
   void onColumnDragging(

@@ -28,7 +28,8 @@ class ExcelOperations {
         CellIndex cellIndexHeader =
             CellIndex.indexByColumnRow(columnIndex: indexHeader, rowIndex: 0);
 
-        sheet.cell(cellIndexHeader).value = TextCellValue(header['value']);
+        sheet.cell(cellIndexHeader).value =
+            TextCellValue(header['value']?.toString() ?? '');
         sheet.cell(cellIndexHeader).cellStyle = cellStyleHeader;
 
         for (int j = 0; j < rows.length; j++) {
@@ -37,7 +38,7 @@ class ExcelOperations {
           CellIndex cellIndexRow = CellIndex.indexByColumnRow(
               columnIndex: indexHeader, rowIndex: j + 1);
 
-          sheet.cell(cellIndexRow).value = TextCellValue(row[header['key']]);
+          sheet.cell(cellIndexRow).value = _toCellValue(row[header['key']]);
           sheet.cell(cellIndexRow).cellStyle = cellStyleRow;
         }
         indexHeader++;
@@ -47,5 +48,13 @@ class ExcelOperations {
     excel.save(
       fileName: 'M+License_$fileName.xlsx',
     );
+  }
+
+  CellValue _toCellValue(dynamic value) {
+    if (value == null) return TextCellValue('');
+    if (value is int) return IntCellValue(value);
+    if (value is double) return DoubleCellValue(value);
+    if (value is bool) return TextCellValue(value ? 'Bəli' : 'Xeyr');
+    return TextCellValue(value.toString());
   }
 }
