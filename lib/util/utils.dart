@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:date_format/date_format.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
@@ -62,7 +62,7 @@ class Utils {
       columns.add(GridColumn(
           columnName: e['key'],
           visible: e['visible'],
-          width: e['width'],
+          width: (e['width'] as num).toDouble(),
           label: Container(
               padding: const EdgeInsets.all(16.0),
               alignment: Alignment.center,

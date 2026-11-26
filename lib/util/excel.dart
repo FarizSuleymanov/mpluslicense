@@ -1,60 +1,78 @@
-import 'package:excel/excel.dart';
+import 'dart:js_interop';
+import 'dart:typed_data';
 
+import 'package:syncfusion_flutter_xlsio/xlsio.dart';
+import 'package:web/web.dart' as web;
+
+// `excel` paketi wasm-da işləmir (archive 3.x və dart:html istifadə edir),
+// ona görə Syncfusion XlsIO + package:web istifadə olunur.
 class ExcelOperations {
   Future<void> exportListToExcelFile(
       String fileName, List headers, List rows) async {
-    final excel = Excel.createExcel();
-    final sheet = excel.sheets[excel.getDefaultSheet() as String];
-    int indexHeader = 0;
+    final Workbook workbook = Workbook();
+    try {
+      final Worksheet sheet = workbook.worksheets[0];
 
-    CellStyle cellStyleHeader = CellStyle(
-      bold: true,
-      bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      leftBorder: Border(borderStyle: BorderStyle.Thin),
-      rightBorder: Border(borderStyle: BorderStyle.Thin),
-      topBorder: Border(borderStyle: BorderStyle.Thin),
-    );
+      final Style headerStyle = workbook.styles.add('HeaderStyle');
+      headerStyle.bold = true;
+      headerStyle.borders.all.lineStyle = LineStyle.thin;
 
-    CellStyle cellStyleRow = CellStyle(
-      bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      leftBorder: Border(borderStyle: BorderStyle.Thin),
-      rightBorder: Border(borderStyle: BorderStyle.Thin),
-    );
+      final Style rowStyle = workbook.styles.add('RowStyle');
+      rowStyle.borders.all.lineStyle = LineStyle.thin;
 
-    headers.map((header) {
-      if (header['visible'] == true && header['key'] != "operation") {
-        sheet!.setColumnAutoFit(indexHeader);
+      final visibleHeaders = headers
+          .where((h) => h['visible'] == true && h['key'] != 'operation')
+          .toList();
 
-        CellIndex cellIndexHeader =
-            CellIndex.indexByColumnRow(columnIndex: indexHeader, rowIndex: 0);
+      for (int c = 0; c < visibleHeaders.length; c++) {
+        final header = visibleHeaders[c];
+        final int col = c + 1; // XlsIO indeksləri 1-dən başlayır
 
-        sheet.cell(cellIndexHeader).value =
-            TextCellValue(header['value']?.toString() ?? '');
-        sheet.cell(cellIndexHeader).cellStyle = cellStyleHeader;
+        final Range headerCell = sheet.getRangeByIndex(1, col);
+        headerCell.setText(header['value']?.toString() ?? '');
+        headerCell.cellStyle = headerStyle;
 
-        for (int j = 0; j < rows.length; j++) {
-          Map<String, dynamic> row = rows[j];
-
-          CellIndex cellIndexRow = CellIndex.indexByColumnRow(
-              columnIndex: indexHeader, rowIndex: j + 1);
-
-          sheet.cell(cellIndexRow).value = _toCellValue(row[header['key']]);
-          sheet.cell(cellIndexRow).cellStyle = cellStyleRow;
+        for (int r = 0; r < rows.length; r++) {
+          final Range cell = sheet.getRangeByIndex(r + 2, col);
+          _setCellValue(cell, rows[r][header['key']]);
+          cell.cellStyle = rowStyle;
         }
-        indexHeader++;
+        sheet.autoFitColumn(col);
       }
-    }).toList();
 
-    excel.save(
-      fileName: 'M+License_$fileName.xlsx',
-    );
+      final List<int> bytes = workbook.saveAsStream();
+      _downloadFile(bytes, 'M+License_$fileName.xlsx');
+    } finally {
+      workbook.dispose();
+    }
   }
 
-  CellValue _toCellValue(dynamic value) {
-    if (value == null) return TextCellValue('');
-    if (value is int) return IntCellValue(value);
-    if (value is double) return DoubleCellValue(value);
-    if (value is bool) return TextCellValue(value ? 'Bəli' : 'Xeyr');
-    return TextCellValue(value.toString());
+  void _setCellValue(Range cell, dynamic value) {
+    if (value == null) return;
+    if (value is num) {
+      cell.setNumber(value.toDouble());
+    } else if (value is bool) {
+      cell.setText(value ? 'Bəli' : 'Xeyr');
+    } else {
+      cell.setText(value.toString());
+    }
+  }
+
+  void _downloadFile(List<int> bytes, String fileName) {
+    final web.Blob blob = web.Blob(
+      [Uint8List.fromList(bytes).toJS].toJS,
+      web.BlobPropertyBag(
+          type:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    );
+    final String url = web.URL.createObjectURL(blob);
+    final web.HTMLAnchorElement anchor = web.HTMLAnchorElement()
+      ..href = url
+      ..download = fileName
+      ..style.display = 'none';
+    web.document.body?.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    web.URL.revokeObjectURL(url);
   }
 }

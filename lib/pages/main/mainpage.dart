@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_session_manager/flutter_session_manager.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:mpluslicense/pages/main/topappbar.dart';
@@ -248,7 +248,7 @@ class _MainPageState extends State<MainPage> {
         await Utils().getCardList(context, userParams, 'Connections', body);
     List list = data['objects'] as List;
     String licenceCountInfo = list
-        .map((e) => '${e['conAppName']}: ${e['conLicenseLimit']}')
+        .map((e) => '${e['conAppName']}: ${e['conCurrentUserCount']}/${e['conLicenseLimit']}')
         .toList()
         .join(';');
 
